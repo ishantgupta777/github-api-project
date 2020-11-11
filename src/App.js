@@ -16,8 +16,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Collapse,
-  Box,
 } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
@@ -55,10 +53,6 @@ function createData(name, calories, fat, carbs, protein) {
 }
 
 const App = () => {
-  // useEffect(() => {
-  //   getRepos();
-  // }, []);
-
   const classes = useStyles();
 
   const [orgName, setOrgName] = useState('');
