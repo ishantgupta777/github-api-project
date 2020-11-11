@@ -48,10 +48,6 @@ const StyledTableRow = withStyles(theme => ({
   },
 }))(TableRow);
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
 const App = () => {
   const classes = useStyles();
 
@@ -106,6 +102,36 @@ const App = () => {
     }
   };
 
+  const getTotalCommits = async repoName => {
+    try {
+      console.log(repoName);
+      const res = await axios.get(
+        `https://api.github.com/repos/${repoName}/commits?per_page=100`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+      const numOfPages =
+        res?.headers?.link?.split(',')[1]?.match(/.*page=(?<page_num>\d+)/)
+          ?.groups?.page_num || 1;
+
+      const resLastPage = await axios.get(
+        `https://api.github.com/repos/${repoName}/commits?per_page=100&page=${numOfPages}`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+      return resLastPage.data.length + 100 * (numOfPages - 1);
+    } catch (err) {
+      console.log(err);
+    }
+    return 0;
+  };
+
   const getRepos = async () => {
     try {
       console.log(page, 'page');
@@ -123,6 +149,13 @@ const App = () => {
       console.log(numOfReposGreterThanN);
       if (numOfReposGreterThanN)
         orgRepos.data.items = orgRepos.data.items.slice(0, numOfRepos % 30);
+
+      orgRepos.data.items = await Promise.all(
+        orgRepos.data.items.map(async obj => {
+          const totalCommits = await getTotalCommits(obj.full_name);
+          return { ...obj, totalCommits };
+        })
+      );
 
       setRepoData([
         ...orgRepos.data.items.map((obj, ind) => {
@@ -286,6 +319,9 @@ const App = () => {
                       <StyledTableCell>ID</StyledTableCell>
                       <StyledTableCell align='center'>Name</StyledTableCell>
                       <StyledTableCell align='center'>Forks</StyledTableCell>
+                      <StyledTableCell align='center'>
+                        Commit Count
+                      </StyledTableCell>
                       <StyledTableCell align='center'>URL</StyledTableCell>
                     </TableRow>
                   </TableHead>
@@ -300,6 +336,9 @@ const App = () => {
                         </StyledTableCell>
                         <StyledTableCell align='center'>
                           {row.forks}
+                        </StyledTableCell>
+                        <StyledTableCell align='center'>
+                          {row.totalCommits}
                         </StyledTableCell>
                         <StyledTableCell align='center'>
                           <a
