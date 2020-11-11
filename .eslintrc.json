@@ -41,6 +41,8 @@
       }
     ],
     "no-unused-vars": "warn",
-    "react/jsx-props-no-spreading": "warn"
+    "react/jsx-props-no-spreading": "warn",
+    "react/destructuring-assignment": "off",
+    "react/no-access-state-in-setstate": "warn"
   }
 }

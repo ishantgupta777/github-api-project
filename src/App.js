@@ -6,10 +6,19 @@ import {
   Typography,
   TextField,
   makeStyles,
+  withStyles,
   Container,
   Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Collapse,
+  Box,
 } from '@material-ui/core';
-import { DataGrid } from '@material-ui/data-grid';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -23,7 +32,29 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default class App extends React.Component {
+const StyledTableCell = withStyles(theme => ({
+  head: {
+    backgroundColor: theme.palette.common.black,
+    color: theme.palette.common.white,
+  },
+  body: {
+    fontSize: 14,
+  },
+}))(TableCell);
+
+const StyledTableRow = withStyles(theme => ({
+  root: {
+    '&:nth-of-type(odd)': {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
+}))(TableRow);
+
+function createData(name, calories, fat, carbs, protein) {
+  return { name, calories, fat, carbs, protein };
+}
+
+const App = () => {
   // useEffect(() => {
   //   getRepos();
   // }, []);
@@ -47,11 +78,21 @@ export default class App extends React.Component {
           Accept: 'application/vnd.github.nebula-preview+json',
         },
       });
-      setOrgData(org.data);
+
+      const accessibleReposApiRes = await axios.get(
+        `https://api.github.com/search/repositories?q=org:${orgName}`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.nebula-preview+json',
+          },
+        }
+      );
+      const accessibleRepoCount = accessibleReposApiRes.data.total_count;
+      setOrgData({ ...org.data, accessibleRepos: accessibleRepoCount });
       if (org?.data?.public_repos)
         setNumOfPages(
           Math.min(
-            Math.ceil(org.data.public_repos / 30),
+            Math.ceil(accessibleRepoCount / 30),
             Math.ceil(numOfRepos / 30)
           )
         );
@@ -63,14 +104,15 @@ export default class App extends React.Component {
       setNumOfPages(0);
       setNumOfRepos(0);
       console.log(err);
-      if (err.response.status === 422) setError("Org doesn't exist on github");
-      else if (err.response.status === 403)
+      if (err?.response?.status === 422)
+        setError("Org doesn't exist on github");
+      else if (err?.response?.status === 403)
         setError('Github api limit exceeded');
       else setError(err.message);
     }
   };
 
-  getRepos = async () => {
+  const getRepos = async () => {
     try {
       console.log(page, 'page');
       const orgRepos = await axios.get(
@@ -81,7 +123,7 @@ export default class App extends React.Component {
           },
         }
       );
-      console.log(orgRepos.data.items, 'repos');
+      console.log(orgRepos.data, 'repos');
       const numOfReposGreterThanN =
         30 * (page - 1) + orgRepos.data.items.length > numOfRepos;
       console.log(numOfReposGreterThanN);
@@ -98,15 +140,16 @@ export default class App extends React.Component {
       setNumOfCommits(0);
       setNumOfPages(0);
       setNumOfRepos(0);
-      console.log(err.response);
-      if (err.response.status === 422) setError("Org doesn't exist on github");
-      else if (err.response.status === 403)
+      console.log(err?.response);
+      if (err?.response?.status === 422)
+        setError("Org doesn't exist on github");
+      else if (err?.response?.status === 403)
         setError('Github api limit exceeded');
       else setError(err.message);
     }
   };
 
-  handleGetData = async () => {
+  const handleGetData = async () => {
     try {
       setError(null);
       if (!orgName) {
@@ -221,6 +264,9 @@ export default class App extends React.Component {
                 Public Repos: {orgData?.public_repos || null}
               </Typography>
               <Typography variant='subtitle1'>
+                Accessible Repos: {orgData?.accessibleRepos || null}
+              </Typography>
+              <Typography variant='subtitle1'>
                 Email: {orgData?.email || null}
               </Typography>
             </div>
@@ -237,27 +283,51 @@ export default class App extends React.Component {
                 marginTop: 20,
                 color: 'black',
                 width: '100%',
-                height: 500,
               }}
             >
-              <DataGrid
-                page={page}
-                rows={repoData}
-                columns={[
-                  { field: 'id', headerName: 'ID', width: 100 },
-                  { field: 'full_name', headerName: 'Name', width: 300 },
-                  { field: 'forks', headerName: 'forks count', width: 300 },
-                  { field: 'git_url', headerName: 'url', width: 400 },
-                ]}
-                pageSize={30}
-                hideFooter
-              />
+              <TableContainer component={Paper}>
+                <Table className={classes.table} aria-label='customized table'>
+                  <TableHead>
+                    <TableRow>
+                      <StyledTableCell>ID</StyledTableCell>
+                      <StyledTableCell align='center'>Name</StyledTableCell>
+                      <StyledTableCell align='center'>Forks</StyledTableCell>
+                      <StyledTableCell align='center'>URL</StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {repoData.map(row => (
+                      <StyledTableRow key={row.name}>
+                        <StyledTableCell component='th' scope='row'>
+                          {row.id}
+                        </StyledTableCell>
+                        <StyledTableCell align='center'>
+                          {row.full_name}
+                        </StyledTableCell>
+                        <StyledTableCell align='center'>
+                          {row.forks}
+                        </StyledTableCell>
+                        <StyledTableCell align='center'>
+                          <a
+                            href={row.html_url}
+                            rel='noopener noreferrer'
+                            target='_blank'
+                          >
+                            {row.html_url}
+                          </a>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </div>
             <div
               style={{
                 marginTop: 20,
                 display: 'flex',
                 justifyContent: 'center',
+                marginBottom: 50,
               }}
             >
               {page < numPages && (
@@ -290,5 +360,6 @@ export default class App extends React.Component {
       </Container>
     </div>
   );
-}
+};
 
+export default App;
