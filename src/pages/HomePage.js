@@ -1,24 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import {
-  Typography,
-  TextField,
-  Container,
-  Button,
-  Table,
-  TableBody,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from '@material-ui/core';
-import { Link } from 'react-router-dom';
+import { Typography, Container } from '@material-ui/core';
 import Navbar from '../components/NavBar';
-import { useStyles, StyledTableCell, StyledTableRow } from './Styles';
+import OrgData from '../components/OrgData';
+import RepoTable from '../components/RepoTable';
+import Form from '../components/Form';
 
 const HomePage = () => {
-  const classes = useStyles();
-
   // react states
   const [orgName, setOrgName] = useState('');
   const [numOfCommits, setNumOfCommits] = useState(0); // value of m
@@ -198,218 +186,32 @@ const HomePage = () => {
     <div className='App'>
       <Navbar />
       <Container>
-        <form
-          className={classes.root}
-          noValidate
-          autoComplete='off'
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            marginTop: 10,
-          }}
-          onSubmit={e => {
-            e.preventDefault();
-            handleGetData();
-          }}
-        >
-          <div>
-            <TextField
-              className={classes.textField}
-              id='org_name'
-              label='Enter org name'
-              value={orgName}
-              onChange={e => {
-                setOrgName(e.target.value);
-              }}
-              required
-            />
-          </div>
-          <div>
-            <TextField
-              className={classes.textField}
-              id='n_value'
-              label='Enter n (number of repos)'
-              type='number'
-              value={numOfRepos}
-              onChange={e => {
-                setNumOfRepos(parseInt(e.target.value, 10));
-              }}
-              InputProps={{ inputProps: { min: 0 } }}
-              required
-            />
-          </div>
-          <div>
-            <TextField
-              className={classes.textField}
-              id='m_value'
-              label='Enter m (number of commits)'
-              type='number'
-              value={numOfCommits}
-              onChange={e => {
-                setNumOfCommits(parseInt(e.target.value, 10));
-              }}
-              InputProps={{ inputProps: { min: 0 } }}
-              required
-            />
-          </div>
-          <div>
-            <Button
-              variant='contained'
-              color='secondary'
-              type='submit'
-              onClick={handleGetData}
-            >
-              Get Data
-            </Button>
-            <Typography style={{ marginTop: 5 }} color='error'>
-              {error || null}
-            </Typography>
-          </div>
-        </form>
+        <Form
+          handleGetData={handleGetData}
+          orgName={orgName}
+          setOrgName={setOrgName}
+          numOfRepos={numOfRepos}
+          setNumOfRepos={setNumOfRepos}
+          numOfCommits={numOfCommits}
+          setNumOfCommits={setNumOfCommits}
+          error={error}
+        />
 
         <Typography color='error' style={{ marginTop: 10 }}>
           {loading ? 'Fetching Data' : null}
         </Typography>
 
-        {orgData && (
-          <div style={{ marginTop: 30, color: 'red', fontWeight: 700 }}>
-            <Typography variant='h5'>Org Details</Typography>
-            <div
-              style={{
-                marginTop: 20,
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-around',
-                color: 'black',
-              }}
-            >
-              <Typography variant='subtitle1'>
-                Name: {orgData?.name || null}
-              </Typography>
-              <Typography variant='subtitle1'>
-                Public Repos: {orgData?.public_repos || null}
-              </Typography>
-              <Typography variant='subtitle1'>
-                Accessible Repos: {orgData?.accessibleRepos || null}
-              </Typography>
-              <Typography variant='subtitle1'>
-                Email: {orgData?.email || null}
-              </Typography>
-            </div>
-          </div>
-        )}
+        {orgData && <OrgData orgData={orgData} />}
 
         {repoData.length > 0 && (
-          <div style={{ marginTop: 40, color: 'red' }}>
-            <Typography variant='h5'>
-              Top n repos (according to forks count)
-            </Typography>
-            <Typography variant='subtitle2'>
-              Click on repo name to see commits
-            </Typography>
-            <div
-              style={{
-                marginTop: 20,
-                color: 'black',
-                width: '100%',
-              }}
-            >
-              <TableContainer component={Paper}>
-                <Table className={classes.table} aria-label='customized table'>
-                  <TableHead>
-                    <TableRow>
-                      <StyledTableCell>ID</StyledTableCell>
-                      <StyledTableCell align='center'>Name</StyledTableCell>
-                      <StyledTableCell align='center'>Forks</StyledTableCell>
-                      <StyledTableCell align='center'>
-                        Commit Count
-                      </StyledTableCell>
-                      <StyledTableCell align='center'>URL</StyledTableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {repoData.map(row => (
-                      <StyledTableRow key={row.id}>
-                        <StyledTableCell component='th' scope='row'>
-                          {row.id}
-                        </StyledTableCell>
-                        <Link
-                          to={{
-                            pathname: `/commits/${row.full_name}`,
-                            data: {
-                              numOfCommits,
-                              repoName: row.full_name,
-                              totalCommits: row.totalCommits,
-                            },
-                          }}
-                        >
-                          <StyledTableCell
-                            align='center'
-                            style={{ color: 'red' }}
-                          >
-                            {row.full_name}
-                          </StyledTableCell>
-                        </Link>
-                        <StyledTableCell align='center'>
-                          {row.forks}
-                        </StyledTableCell>
-                        <StyledTableCell align='center'>
-                          {row.totalCommits}
-                        </StyledTableCell>
-                        <StyledTableCell align='center'>
-                          <a
-                            href={row.html_url}
-                            rel='noopener noreferrer'
-                            target='_blank'
-                          >
-                            {row.html_url}
-                          </a>
-                        </StyledTableCell>
-                      </StyledTableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </div>
-            <Typography color='error' style={{ marginTop: 10 }}>
-              {loading ? 'Fetching Data' : null}
-            </Typography>
-            <div
-              style={{
-                marginTop: 20,
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: 50,
-              }}
-            >
-              {page < numPages && (
-                <Button
-                  variant='contained'
-                  color='secondary'
-                  onClick={() => {
-                    setPage(page + 1);
-                  }}
-                  style={{ marginRight: 20 }}
-                >
-                  Next
-                </Button>
-              )}
-              {page > 1 && (
-                <Button
-                  variant='contained'
-                  color='secondary'
-                  onClick={() => {
-                    setPage(page - 1);
-                  }}
-                  style={{ marginLeft: 20 }}
-                >
-                  Prev
-                </Button>
-              )}
-            </div>
-          </div>
+          <RepoTable
+            repoData={repoData}
+            page={page}
+            setPage={setPage}
+            numOfCommits={numOfCommits}
+            numPages={numPages}
+            loading={loading}
+          />
         )}
       </Container>
     </div>
