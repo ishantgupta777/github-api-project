@@ -56,7 +56,7 @@ const CommitsPage = props => {
         setLoading(true);
 
         const res = await axios.get(
-          `https://api.github.com/repos/${repoName}/commits?per_page=100&page=${page}`,
+          `https://api.github.com/repos/${repoName}/stats/contributors?direction=desc&per_page=100&page=${page}`,
           {
             headers: {
               Accept: 'application/vnd.github.v3+json',
@@ -64,6 +64,8 @@ const CommitsPage = props => {
             },
           }
         );
+
+        // console.log(res);
 
         // to check if the data fetched is more than M value
         const numOfCommitssGreterThanM =
@@ -73,7 +75,7 @@ const CommitsPage = props => {
           res.data = res.data.slice(0, numOfCommits % 100);
 
         setCommits(
-          res.data.map((commit, ind) => {
+          res.data.reverse().map((commit, ind) => {
             return { ...commit, id: 100 * (page - 1) + ind + 1 };
           })
         );
@@ -107,7 +109,8 @@ const CommitsPage = props => {
                 </Button>
               </Link>
               <Typography variant='h5'>
-                Top m ({props?.location?.data?.numOfCommits}) commits of repo{' '}
+                Top m ({props?.location?.data?.numOfCommits}) commiterss of repo
+                and their commit count
                 {props?.location?.data?.repoName || ''}
               </Typography>
             </div>
@@ -123,9 +126,15 @@ const CommitsPage = props => {
                   <TableHead>
                     <TableRow>
                       <StyledTableCell>ID</StyledTableCell>
-                      <StyledTableCell align='center'>Author</StyledTableCell>
-                      <StyledTableCell align='center'>Message</StyledTableCell>
-                      <StyledTableCell align='center'>URL</StyledTableCell>
+                      <StyledTableCell align='center'>
+                        Committer
+                      </StyledTableCell>
+                      <StyledTableCell align='center'>
+                        Commit Count
+                      </StyledTableCell>
+                      <StyledTableCell align='center'>
+                        GitHub Profile Link
+                      </StyledTableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -138,10 +147,10 @@ const CommitsPage = props => {
                           align='center'
                           style={{ color: 'red' }}
                         >
-                          {row?.commit?.author?.name || null}
+                          {row?.author?.login || null}
                         </StyledTableCell>
                         <StyledTableCell align='center'>
-                          {row?.commit?.message?.substring(0, 111)}
+                          {row?.total || -1}
                         </StyledTableCell>
                         <StyledTableCell align='center'>
                           <a
@@ -149,7 +158,7 @@ const CommitsPage = props => {
                             rel='noopener noreferrer'
                             target='_blank'
                           >
-                            {row.html_url.substring(0, 50)}
+                            {/* {row.html_url.substring(0, 50)} */}
                           </a>
                         </StyledTableCell>
                       </StyledTableRow>
@@ -169,7 +178,7 @@ const CommitsPage = props => {
                 marginBottom: 50,
               }}
             >
-              {page < numPages && (
+              {/* {page < numPages && (
                 <Button
                   variant='contained'
                   color='secondary'
@@ -180,7 +189,7 @@ const CommitsPage = props => {
                 >
                   Next
                 </Button>
-              )}
+              )} */}
               {page > 1 && (
                 <Button
                   variant='contained'

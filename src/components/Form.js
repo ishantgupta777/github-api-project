@@ -60,13 +60,14 @@ export default function Form({
         <TextField
           className={classes.textField}
           id='m_value'
-          label='Enter m (number of commits)'
+          label='Enter m (number of committies)'
           type='number'
           value={numOfCommits}
           onChange={e => {
-            setNumOfCommits(parseInt(e.target.value, 10));
+            if (e.target.value <= 100)
+              setNumOfCommits(parseInt(e.target.value, 10));
           }}
-          InputProps={{ inputProps: { min: 0 } }}
+          InputProps={{ inputProps: { min: 0, max: 100 } }}
           required
         />
       </div>
