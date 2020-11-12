@@ -37,6 +37,7 @@ const HomePage = props => {
   const getOrgData = async () => {
     try {
       setLoading(true);
+      setPage(1);
 
       const org = await axios.get(`https://api.github.com/orgs/${orgName}`, {
         headers: {

@@ -44,7 +44,7 @@ const Committees = props => {
         setLoading(true);
 
         const res = await axios.get(
-          `https://api.github.com/repos/${repoName}/stats/contributors`,
+          `https://api.github.com/repos/${repoName}/stats/contributors?anon=1`,
           {
             headers: {
               Accept: 'application/vnd.github.v3+json',
