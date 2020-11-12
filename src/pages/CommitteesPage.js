@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Typography,
-  makeStyles,
-  withStyles,
   Container,
   Button,
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
   TableRow,
@@ -18,45 +15,36 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/NavBar';
 import { useStyles, StyledTableCell, StyledTableRow } from './Styles';
 
-const CommitsPage = props => {
+const Committees = props => {
   const classes = useStyles();
 
-  const [commits, setCommits] = useState([]); // state to store commits
-  const [page, setPage] = useState(1); // state to store current page num
+  const [committees, setCommittees] = useState([]); // state to store committees
   const [loading, setLoading] = useState(false); // state to check if data is getting fetched
-  const [numPages, setNumPages] = useState(1); // state to store max num of pages
 
   // this function will set states back to their initial values in case of an error
   const setStatesBackToInitialValues = () => {
-    setCommits([]);
-    setPage(1);
-    setNumPages(1);
+    setCommittees([]);
     setLoading(false);
   };
 
   useEffect(() => {
     if (
-      !(props?.location?.data?.repoName || props?.location?.data?.numOfCommits)
+      !(
+        props?.location?.data?.repoName ||
+        props?.location?.data?.numOfCommittees
+      )
     )
       return;
 
-    const { repoName, numOfCommits } = props.location.data;
+    const { repoName, numOfCommittees } = props.location.data;
 
-    // this block of code will set the max num of pages
-    setNumPages(
-      Math.min(
-        Math.ceil(props.location.data.totalCommits / 100),
-        Math.ceil(numOfCommits / 100)
-      )
-    );
-
-    // this block of code will get the commits
-    const getCommits = async () => {
+    // this block of code will get the committees
+    const getCommittees = async () => {
       try {
         setLoading(true);
 
         const res = await axios.get(
-          `https://api.github.com/repos/${repoName}/stats/contributors?direction=desc&per_page=100&page=${page}`,
+          `https://api.github.com/repos/${repoName}/stats/contributors`,
           {
             headers: {
               Accept: 'application/vnd.github.v3+json',
@@ -66,17 +54,19 @@ const CommitsPage = props => {
         );
 
         // console.log(res);
+
+        // to get the data in desc order
         res.data = res.data.reverse();
+
         // to check if the data fetched is more than M value
-        const numOfCommitssGreterThanM =
-          100 * (page - 1) + res.data.length > numOfCommits;
+        const numOfCommitteesGreterThanM = res.data.length > numOfCommittees;
 
-        if (numOfCommitssGreterThanM)
-          res.data = res.data.slice(0, numOfCommits % 100);
+        if (numOfCommitteesGreterThanM)
+          res.data = res.data.slice(0, numOfCommittees);
 
-        setCommits(
+        setCommittees(
           res.data.map((commit, ind) => {
-            return { ...commit, id: 100 * (page - 1) + ind + 1 };
+            return { ...commit, id: ind + 1 };
           })
         );
 
@@ -86,20 +76,29 @@ const CommitsPage = props => {
         console.log(err);
       }
     };
-    getCommits();
-  }, [page]);
+    getCommittees();
+  }, []);
 
   return (
-    <div className='commits_page'>
+    <div className='committees_page'>
       <Navbar />
-      <Typography color='error' style={{ marginTop: 10 }}>
+      <Typography
+        color='error'
+        style={{ marginTop: 10, fontSize: 25, margin: 'auto' }}
+      >
         {loading ? 'Fetching Data' : null}
       </Typography>
+
       <Container>
-        {commits.length > 0 && (
+        {committees.length > 0 && (
           <div style={{ marginTop: 40, color: 'red' }}>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Link to='/'>
+              <Link
+                to={{
+                  pathname: `/`,
+                  data: props?.location?.data || {},
+                }}
+              >
                 <Button
                   variant='contained'
                   color='secondary'
@@ -108,9 +107,9 @@ const CommitsPage = props => {
                   Back
                 </Button>
               </Link>
+
               <Typography variant='h5'>
-                Top m ({props?.location?.data?.numOfCommits}) commiterss of repo
-                and their commit count
+                Top m committees of repo and their commit count{' '}
                 {props?.location?.data?.repoName || ''}
               </Typography>
             </div>
@@ -138,7 +137,7 @@ const CommitsPage = props => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {commits.map(row => (
+                    {committees.map(row => (
                       <StyledTableRow key={row.id}>
                         <StyledTableCell component='th' scope='row'>
                           {row.id}
@@ -167,42 +166,6 @@ const CommitsPage = props => {
                 </Table>
               </TableContainer>
             </div>
-            <Typography color='error' style={{ marginTop: 10 }}>
-              {loading ? 'Fetching Data' : null}
-            </Typography>
-            <div
-              style={{
-                marginTop: 20,
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: 50,
-              }}
-            >
-              {/* {page < numPages && (
-                <Button
-                  variant='contained'
-                  color='secondary'
-                  onClick={() => {
-                    setPage(page + 1);
-                  }}
-                  style={{ marginRight: 20 }}
-                >
-                  Next
-                </Button>
-              )} */}
-              {page > 1 && (
-                <Button
-                  variant='contained'
-                  color='secondary'
-                  onClick={() => {
-                    setPage(page - 1);
-                  }}
-                  style={{ marginLeft: 20 }}
-                >
-                  Prev
-                </Button>
-              )}
-            </div>
           </div>
         )}
       </Container>
@@ -210,4 +173,4 @@ const CommitsPage = props => {
   );
 };
 
-export default CommitsPage;
+export default Committees;

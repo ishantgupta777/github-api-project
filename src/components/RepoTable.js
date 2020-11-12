@@ -16,9 +16,11 @@ export default function RepoTable({
   repoData,
   page,
   setPage,
-  numOfCommits,
+  numOfCommittees,
   numPages,
   loading,
+  numOfRepos,
+  orgName,
 }) {
   const classes = useStyles();
   return (
@@ -27,7 +29,7 @@ export default function RepoTable({
         Top n repos (according to forks count)
       </Typography>
       <Typography variant='subtitle2'>
-        Click on repo name to see commits
+        Click on repo name to see committees
       </Typography>
       <div
         style={{
@@ -55,11 +57,12 @@ export default function RepoTable({
                   </StyledTableCell>
                   <Link
                     to={{
-                      pathname: `/commits/${row.full_name}`,
+                      pathname: `/committees/${row.full_name}`,
                       data: {
-                        numOfCommits,
+                        numOfRepos,
+                        orgName,
+                        numOfCommittees,
                         repoName: row.full_name,
-                        totalCommits: row.totalCommits,
                       },
                     }}
                   >

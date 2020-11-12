@@ -3,14 +3,14 @@ import { Route, Switch } from 'react-router-dom';
 import './App.css';
 
 import HomePage from './pages/HomePage';
-import CommitsPage from './pages/CommitsPage';
+import CommitteesPage from './pages/CommitteesPage';
 
 export default function App() {
   return (
     <main>
       <Switch>
         <Route path='/' component={HomePage} exact />
-        <Route path='/commits' component={CommitsPage} />
+        <Route path='/committees' component={CommitteesPage} />
       </Switch>
     </main>
   );

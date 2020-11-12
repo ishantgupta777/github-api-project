@@ -6,16 +6,20 @@ import OrgData from '../components/OrgData';
 import RepoTable from '../components/RepoTable';
 import Form from '../components/Form';
 
-const HomePage = () => {
+const HomePage = props => {
   // react states
-  const [orgName, setOrgName] = useState('');
-  const [numOfCommits, setNumOfCommits] = useState(0); // value of m
-  const [numOfRepos, setNumOfRepos] = useState(0); // value of n
+  const [orgName, setOrgName] = useState(props?.location?.data?.orgName || '');
+  const [numOfCommittees, setNumOfCommittees] = useState(
+    props?.location?.data?.numOfCommittees || 0
+  ); // value of m
+  const [numOfRepos, setNumOfRepos] = useState(
+    props?.location?.data?.numOfRepos || 0
+  ); // value of n
   const [orgData, setOrgData] = useState(null); // to store data of a organization
   const [error, setError] = useState(null); // state to store any possible error states
-  const [page, setPage] = useState(1); // state to store page number of repos, each page consists of at max 30 repos
+  const [page, setPage] = useState(1); // state to store page number of repos, each page consists of at max 10 repos
   const [repoData, setRepoData] = useState([]); // state to store repos fetched from github api
-  const [numPages, setNumOfPages] = useState(0); // max number of pages that can be possible from N value or number of repos exists in the org
+  const [numPages, setNumOfPages] = useState(1); // max number of pages that can be possible from N value or number of repos exists in the org
   const [loading, setLoading] = useState(false); // state to store if data is getting fetched from GitHub api or not
 
   // this function will set states back to their initial values in case of an error
@@ -23,8 +27,8 @@ const HomePage = () => {
     setOrgName('');
     setOrgData(null);
     setLoading(false);
-    setNumOfCommits(0);
-    setNumOfPages(0);
+    setNumOfCommittees(0);
+    setNumOfPages(1);
     setNumOfRepos(0);
     setPage(1);
     setLoading(false);
@@ -58,8 +62,8 @@ const HomePage = () => {
       if (org?.data?.public_repos)
         setNumOfPages(
           Math.min(
-            Math.ceil(accessibleRepoCount / 30),
-            Math.ceil(numOfRepos / 30)
+            Math.ceil(accessibleRepoCount / 10),
+            Math.ceil(numOfRepos / 10)
           )
         );
       else setNumOfPages(0);
@@ -119,7 +123,7 @@ const HomePage = () => {
       setLoading(true);
 
       const orgRepos = await axios.get(
-        `https://api.github.com/search/repositories?q=org:${orgName}&sort=forks&order=desc&per_page=30&page=${page}`,
+        `https://api.github.com/search/repositories?q=org:${orgName}&sort=forks&order=desc&per_page=10&page=${page}`,
         {
           headers: {
             Accept: 'application/vnd.github.mercy-preview+json',
@@ -130,10 +134,10 @@ const HomePage = () => {
 
       // this block of code will check if the repos got from the api response are more than N value
       const numOfReposGreterThanN =
-        30 * (page - 1) + orgRepos.data.items.length > numOfRepos;
+        10 * (page - 1) + orgRepos.data.items.length > numOfRepos;
 
       if (numOfReposGreterThanN)
-        orgRepos.data.items = orgRepos.data.items.slice(0, numOfRepos % 30);
+        orgRepos.data.items = orgRepos.data.items.slice(0, numOfRepos % 10);
 
       // this code will get the commits count of each repo
       orgRepos.data.items = await Promise.all(
@@ -145,7 +149,7 @@ const HomePage = () => {
 
       setRepoData([
         ...orgRepos.data.items.map((obj, ind) => {
-          return { ...obj, id: 30 * (page - 1) + ind + 1 };
+          return { ...obj, id: 10 * (page - 1) + ind + 1 };
         }),
       ]);
 
@@ -192,8 +196,8 @@ const HomePage = () => {
           setOrgName={setOrgName}
           numOfRepos={numOfRepos}
           setNumOfRepos={setNumOfRepos}
-          numOfCommits={numOfCommits}
-          setNumOfCommits={setNumOfCommits}
+          numOfCommittees={numOfCommittees}
+          setNumOfCommittees={setNumOfCommittees}
           error={error}
         />
 
@@ -208,9 +212,11 @@ const HomePage = () => {
             repoData={repoData}
             page={page}
             setPage={setPage}
-            numOfCommits={numOfCommits}
+            numOfCommittees={numOfCommittees}
             numPages={numPages}
             loading={loading}
+            orgName={orgName}
+            numOfRepos={numOfRepos}
           />
         )}
       </Container>

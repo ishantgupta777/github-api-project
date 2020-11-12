@@ -8,8 +8,8 @@ export default function Form({
   setOrgName,
   numOfRepos,
   setNumOfRepos,
-  numOfCommits,
-  setNumOfCommits,
+  numOfCommittees,
+  setNumOfCommittees,
   error,
 }) {
   const classes = useStyles();
@@ -62,10 +62,10 @@ export default function Form({
           id='m_value'
           label='Enter m (number of committies)'
           type='number'
-          value={numOfCommits}
+          value={numOfCommittees}
           onChange={e => {
             if (e.target.value <= 100)
-              setNumOfCommits(parseInt(e.target.value, 10));
+              setNumOfCommittees(parseInt(e.target.value, 10));
           }}
           InputProps={{ inputProps: { min: 0, max: 100 } }}
           required
