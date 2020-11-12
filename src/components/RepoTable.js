@@ -31,6 +31,9 @@ export default function RepoTable({
       <Typography variant='subtitle2'>
         Click on repo name to see committees
       </Typography>
+      <Typography variant='subtitle2'>
+        To make the api call faster, repos are paginated
+      </Typography>
       <div
         style={{
           marginTop: 20,
@@ -100,12 +103,12 @@ export default function RepoTable({
           marginBottom: 50,
         }}
       >
-        {page < numPages && (
+        {page <= numPages && (
           <Button
             variant='contained'
             color='secondary'
             onClick={() => {
-              setPage(page + 1);
+              if (page < numPages) setPage(page + 1);
             }}
             style={{ marginRight: 20 }}
           >
