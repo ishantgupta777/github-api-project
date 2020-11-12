@@ -66,7 +66,7 @@ const CommitsPage = props => {
         );
 
         // console.log(res);
-
+        res.data = res.data.reverse();
         // to check if the data fetched is more than M value
         const numOfCommitssGreterThanM =
           100 * (page - 1) + res.data.length > numOfCommits;
@@ -75,7 +75,7 @@ const CommitsPage = props => {
           res.data = res.data.slice(0, numOfCommits % 100);
 
         setCommits(
-          res.data.reverse().map((commit, ind) => {
+          res.data.map((commit, ind) => {
             return { ...commit, id: 100 * (page - 1) + ind + 1 };
           })
         );
