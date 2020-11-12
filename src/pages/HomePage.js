@@ -1,70 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  AppBar,
   Typography,
   TextField,
-  makeStyles,
-  withStyles,
   Container,
   Button,
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
   TableRow,
   Paper,
 } from '@material-ui/core';
 import { Link } from 'react-router-dom';
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    '& > *': {
-      margin: theme.spacing(1),
-    },
-  },
-  textField: {
-    width: 300,
-    alignSelf: 'center',
-  },
-}));
-
-const StyledTableCell = withStyles(theme => ({
-  head: {
-    backgroundColor: theme.palette.common.black,
-    color: theme.palette.common.white,
-  },
-  body: {
-    fontSize: 14,
-  },
-}))(TableCell);
-
-const StyledTableRow = withStyles(theme => ({
-  root: {
-    '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
-    },
-  },
-}))(TableRow);
+import Navbar from '../components/NavBar';
+import { useStyles, StyledTableCell, StyledTableRow } from './Styles';
 
 const HomePage = () => {
   const classes = useStyles();
 
+  // react states
   const [orgName, setOrgName] = useState('');
-  const [numOfCommits, setNumOfCommits] = useState(0);
-  const [numOfRepos, setNumOfRepos] = useState(0);
-  const [orgData, setOrgData] = useState(null);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [repoData, setRepoData] = useState([]);
-  const [commitsData, setCommitsData] = useState([]);
-  const [numPages, setNumOfPages] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [numOfCommits, setNumOfCommits] = useState(0); // value of m
+  const [numOfRepos, setNumOfRepos] = useState(0); // value of n
+  const [orgData, setOrgData] = useState(null); // to store data of a organization
+  const [error, setError] = useState(null); // state to store any possible error states
+  const [page, setPage] = useState(1); // state to store page number of repos, each page consists of at max 30 repos
+  const [repoData, setRepoData] = useState([]); // state to store repos fetched from github api
+  const [numPages, setNumOfPages] = useState(0); // max number of pages that can be possible from N value or number of repos exists in the org
+  const [loading, setLoading] = useState(false); // state to store if data is getting fetched from GitHub api or not
+
+  // this function will set states back to their initial values in case of an error
+  const setStatesBackToInitialValues = () => {
+    setOrgName('');
+    setOrgData(null);
+    setLoading(false);
+    setNumOfCommits(0);
+    setNumOfPages(0);
+    setNumOfRepos(0);
+    setPage(1);
+    setLoading(false);
+  };
 
   const getOrgData = async () => {
     try {
       setLoading(true);
+
       const org = await axios.get(`https://api.github.com/orgs/${orgName}`, {
         headers: {
           Accept: 'application/vnd.github.nebula-preview+json',
@@ -77,12 +58,15 @@ const HomePage = () => {
         {
           headers: {
             Accept: 'application/vnd.github.nebula-preview+json',
-            Authorization: 'Token 119d2564831d4ebf0616a64a2d2bcbc504c6f098',
+            Authorization: 'Token 119d2564831d4ebf0616a64a2d2bcbc504c6f098', // this token has no private permission, its used so that github api limit can be increased
           },
         }
       );
+
       const accessibleRepoCount = accessibleReposApiRes.data.total_count;
       setOrgData({ ...org.data, accessibleRepos: accessibleRepoCount });
+
+      // this block of code will set max num of pages possible
       if (org?.data?.public_repos)
         setNumOfPages(
           Math.min(
@@ -91,14 +75,11 @@ const HomePage = () => {
           )
         );
       else setNumOfPages(0);
-      console.log(org);
+
       setLoading(false);
     } catch (err) {
-      setOrgData(null);
-      setLoading(false);
-      setNumOfCommits(0);
-      setNumOfPages(0);
-      setNumOfRepos(0);
+      setStatesBackToInitialValues();
+
       console.log(err);
       if (err?.response?.status === 422)
         setError("Org doesn't exist on github");
@@ -108,9 +89,8 @@ const HomePage = () => {
     }
   };
 
-  const getTotalCommits = async repoName => {
+  const getCommitsCount = async repoName => {
     try {
-      console.log(repoName);
       const res = await axios.get(
         `https://api.github.com/repos/${repoName}/commits?per_page=100`,
         {
@@ -120,6 +100,8 @@ const HomePage = () => {
           },
         }
       );
+
+      // this block of code will get the num of pages from the response of above api call
       const numOfPages =
         res?.headers?.link?.split(',')[1]?.match(/.*page=(?<page_num>\d+)/)
           ?.groups?.page_num || 1;
@@ -133,17 +115,21 @@ const HomePage = () => {
           },
         }
       );
+
+      // return total commit counts of repo
       return resLastPage.data.length + 100 * (numOfPages - 1);
     } catch (err) {
+      setStatesBackToInitialValues();
       console.log(err);
     }
     return 0;
   };
 
+  // this function will get the top repos of the org on the basis of forks
   const getRepos = async () => {
     try {
       setLoading(true);
-      console.log(page, 'page');
+
       const orgRepos = await axios.get(
         `https://api.github.com/search/repositories?q=org:${orgName}&sort=forks&order=desc&per_page=30&page=${page}`,
         {
@@ -153,16 +139,18 @@ const HomePage = () => {
           },
         }
       );
-      console.log(orgRepos.data, 'repos');
+
+      // this block of code will check if the repos got from the api response are more than N value
       const numOfReposGreterThanN =
         30 * (page - 1) + orgRepos.data.items.length > numOfRepos;
-      console.log(numOfReposGreterThanN);
+
       if (numOfReposGreterThanN)
         orgRepos.data.items = orgRepos.data.items.slice(0, numOfRepos % 30);
 
+      // this code will get the commits count of each repo
       orgRepos.data.items = await Promise.all(
         orgRepos.data.items.map(async obj => {
-          const totalCommits = await getTotalCommits(obj.full_name);
+          const totalCommits = await getCommitsCount(obj.full_name);
           return { ...obj, totalCommits };
         })
       );
@@ -172,13 +160,11 @@ const HomePage = () => {
           return { ...obj, id: 30 * (page - 1) + ind + 1 };
         }),
       ]);
+
       setLoading(false);
     } catch (err) {
-      setLoading(false);
-      setOrgData(null);
-      setNumOfCommits(0);
-      setNumOfPages(0);
-      setNumOfRepos(0);
+      setStatesBackToInitialValues();
+
       console.log(err?.response);
       if (err?.response?.status === 422)
         setError("Org doesn't exist on github");
@@ -191,6 +177,7 @@ const HomePage = () => {
   const handleGetData = async () => {
     try {
       setError(null);
+
       if (!orgName) {
         setError('Please enter org name');
         return;
@@ -198,6 +185,7 @@ const HomePage = () => {
       await getOrgData();
       await getRepos();
     } catch (err) {
+      setStatesBackToInitialValues();
       console.log(err);
     }
   };
@@ -208,11 +196,7 @@ const HomePage = () => {
 
   return (
     <div className='App'>
-      <AppBar position='static'>
-        <Typography variant='h6' color='inherit'>
-          Ishant Github Assignment
-        </Typography>
-      </AppBar>
+      <Navbar />
       <Container>
         <form
           className={classes.root}
@@ -284,9 +268,11 @@ const HomePage = () => {
             </Typography>
           </div>
         </form>
+
         <Typography color='error' style={{ marginTop: 10 }}>
           {loading ? 'Fetching Data' : null}
         </Typography>
+
         {orgData && (
           <div style={{ marginTop: 30, color: 'red', fontWeight: 700 }}>
             <Typography variant='h5'>Org Details</Typography>
@@ -345,7 +331,7 @@ const HomePage = () => {
                   </TableHead>
                   <TableBody>
                     {repoData.map(row => (
-                      <StyledTableRow key={row.name}>
+                      <StyledTableRow key={row.id}>
                         <StyledTableCell component='th' scope='row'>
                           {row.id}
                         </StyledTableCell>

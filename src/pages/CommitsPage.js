@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  AppBar,
   Typography,
   makeStyles,
   withStyles,
@@ -16,57 +15,46 @@ import {
   Paper,
 } from '@material-ui/core';
 import { Link } from 'react-router-dom';
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    '& > *': {
-      margin: theme.spacing(1),
-    },
-  },
-  textField: {
-    width: 300,
-    alignSelf: 'center',
-  },
-}));
-
-const StyledTableCell = withStyles(theme => ({
-  head: {
-    backgroundColor: theme.palette.common.black,
-    color: theme.palette.common.white,
-  },
-  body: {
-    fontSize: 14,
-  },
-}))(TableCell);
-
-const StyledTableRow = withStyles(theme => ({
-  root: {
-    '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
-    },
-  },
-}))(TableRow);
+import Navbar from '../components/NavBar';
+import { useStyles, StyledTableCell, StyledTableRow } from './Styles';
 
 const CommitsPage = props => {
   const classes = useStyles();
 
-  const [commits, setCommits] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [numPages, setNumPages] = useState(1);
+  const [commits, setCommits] = useState([]); // state to store commits
+  const [page, setPage] = useState(1); // state to store current page num
+  const [loading, setLoading] = useState(false); // state to check if data is getting fetched
+  const [numPages, setNumPages] = useState(1); // state to store max num of pages
+
+  // this function will set states back to their initial values in case of an error
+  const setStatesBackToInitialValues = () => {
+    setCommits([]);
+    setPage(1);
+    setNumPages(1);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    console.log(props.location.data);
+    if (
+      !(props?.location?.data?.repoName || props?.location?.data?.numOfCommits)
+    )
+      return;
+
     const { repoName, numOfCommits } = props.location.data;
+
+    // this block of code will set the max num of pages
     setNumPages(
       Math.min(
         Math.ceil(props.location.data.totalCommits / 100),
         Math.ceil(numOfCommits / 100)
       )
     );
+
+    // this block of code will get the commits
     const getCommits = async () => {
       try {
         setLoading(true);
+
         const res = await axios.get(
           `https://api.github.com/repos/${repoName}/commits?per_page=100&page=${page}`,
           {
@@ -76,20 +64,23 @@ const CommitsPage = props => {
             },
           }
         );
-        console.log(res.data);
+
+        // to check if the data fetched is more than M value
         const numOfCommitssGreterThanM =
           100 * (page - 1) + res.data.length > numOfCommits;
-        console.log(numOfCommitssGreterThanM);
+
         if (numOfCommitssGreterThanM)
           res.data = res.data.slice(0, numOfCommits % 100);
+
         setCommits(
           res.data.map((commit, ind) => {
             return { ...commit, id: 100 * (page - 1) + ind + 1 };
           })
         );
+
         setLoading(false);
       } catch (err) {
-        setLoading(false);
+        setStatesBackToInitialValues();
         console.log(err);
       }
     };
@@ -97,12 +88,8 @@ const CommitsPage = props => {
   }, [page]);
 
   return (
-    <div className='App'>
-      <AppBar position='static'>
-        <Typography variant='h6' color='inherit'>
-          Ishant Github Assignment
-        </Typography>
-      </AppBar>
+    <div className='commits_page'>
+      <Navbar />
       <Typography color='error' style={{ marginTop: 10 }}>
         {loading ? 'Fetching Data' : null}
       </Typography>
@@ -143,7 +130,7 @@ const CommitsPage = props => {
                   </TableHead>
                   <TableBody>
                     {commits.map(row => (
-                      <StyledTableRow key={row.name}>
+                      <StyledTableRow key={row.id}>
                         <StyledTableCell component='th' scope='row'>
                           {row.id}
                         </StyledTableCell>
