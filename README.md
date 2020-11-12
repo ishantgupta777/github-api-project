@@ -22,3 +22,8 @@ docker-compose up --build
 npm install
 npm start
 ```
+
+### Some points:
+
+- M value (num of committees) can be atmax 100
+- GitHub client token added in the codebase itself instead of .env file, so that GitHub api don't show limit exceeded
