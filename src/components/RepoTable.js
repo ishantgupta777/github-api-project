@@ -103,7 +103,7 @@ export default function RepoTable({
           marginBottom: 50,
         }}
       >
-        {page <= numPages && (
+        {page <= numPages && numPages != 1 && (
           <Button
             variant='contained'
             color='secondary'
