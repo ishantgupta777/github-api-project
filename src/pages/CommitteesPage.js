@@ -153,11 +153,11 @@ const Committees = props => {
                         </StyledTableCell>
                         <StyledTableCell align='center'>
                           <a
-                            href={row.html_url}
+                            href={row?.author?.html_url}
                             rel='noopener noreferrer'
                             target='_blank'
                           >
-                            {/* {row.html_url.substring(0, 50)} */}
+                            {row?.author?.html_url?.substring(0, 50)}
                           </a>
                         </StyledTableCell>
                       </StyledTableRow>
