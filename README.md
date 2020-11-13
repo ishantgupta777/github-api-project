@@ -12,6 +12,7 @@ By [Ishant](https://ishantgupta.in).
 ```
 docker-compose up --build
 ```
+- Open localhost:3000 in your browser
 
 #### `Method 2 (using node js)`
 
@@ -22,6 +23,7 @@ docker-compose up --build
 npm install
 npm start
 ```
+- Open localhost:3000 in your browser
 
 ### Some points:
 
